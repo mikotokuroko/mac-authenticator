@@ -4,7 +4,7 @@ import SwiftUI
 struct ContentView: View {
   @ObservedObject var model: AppModel
   @State private var removal: OTPAccount?
-  @State private var accountListHeight: CGFloat = 1
+  @State private var accountListHeight: CGFloat = 160
   @AppStorage("simplifiedView") private var simplified = true
   @AppStorage("minimalDefaultApplied") private var minimalDefaultApplied = false
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -144,13 +144,12 @@ struct ContentView: View {
               Text("No matching accounts").foregroundStyle(.secondary).padding(24)
             }
           }
-          .background {
-            GeometryReader { geometry in
-              Color.clear.preference(key: AccountListHeightKey.self, value: geometry.size.height)
-            }
+          .onGeometryChange(for: CGFloat.self) { geometry in
+            geometry.size.height
+          } action: { height in
+            if height > 0 { accountListHeight = height }
           }
         }
-        .onPreferenceChange(AccountListHeightKey.self) { accountListHeight = $0 }
         .frame(height: min(compact ? 380 : 330, accountListHeight))
       }
       if model.accounts.isEmpty {
@@ -249,12 +248,5 @@ private struct CodeButtonStyle: ButtonStyle {
         }
         .onHover { hovered = $0 }
     }
-  }
-}
-
-private struct AccountListHeightKey: PreferenceKey {
-  static let defaultValue: CGFloat = 1
-  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-    value = nextValue()
   }
 }
