@@ -4,6 +4,7 @@ import SwiftUI
 struct ContentView: View {
   @ObservedObject var model: AppModel
   @State private var removal: OTPAccount?
+  @State private var accountListHeight: CGFloat = 1
   @AppStorage("simplifiedView") private var simplified = true
   @AppStorage("minimalDefaultApplied") private var minimalDefaultApplied = false
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -124,7 +125,7 @@ struct ContentView: View {
             .quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 10))
         }
         ScrollView {
-          LazyVStack(spacing: 0) {
+          VStack(spacing: 0) {
             ForEach(visibleAccounts) { account in
               TimelineView(.periodic(from: .now, by: 1)) { timeline in
                 accountRow(account, date: timeline.date)
@@ -143,11 +144,14 @@ struct ContentView: View {
               Text("No matching accounts").foregroundStyle(.secondary).padding(24)
             }
           }
-        }.frame(
-          height: min(
-            compact ? 380 : 330,
-            CGFloat(max(1, visibleAccounts.count)) * (compact ? 78 : 112)
-              + CGFloat(max(0, visibleAccounts.count - 1))))
+          .background {
+            GeometryReader { geometry in
+              Color.clear.preference(key: AccountListHeightKey.self, value: geometry.size.height)
+            }
+          }
+        }
+        .onPreferenceChange(AccountListHeightKey.self) { accountListHeight = $0 }
+        .frame(height: min(compact ? 380 : 330, accountListHeight))
       }
       if model.accounts.isEmpty {
         HStack(spacing: 10) {
@@ -205,7 +209,6 @@ struct ContentView: View {
         }
       }.padding(.horizontal, compact ? 8 : 14)
         .padding(.vertical, compact ? 6 : 14)
-        .frame(height: compact ? 78 : nil, alignment: .center)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(RoundedRectangle(cornerRadius: 14))
     }.buttonStyle(CodeButtonStyle()).help(account.name + " — Click to copy").accessibilityLabel(
@@ -246,5 +249,12 @@ private struct CodeButtonStyle: ButtonStyle {
         }
         .onHover { hovered = $0 }
     }
+  }
+}
+
+private struct AccountListHeightKey: PreferenceKey {
+  static let defaultValue: CGFloat = 1
+  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+    value = nextValue()
   }
 }
