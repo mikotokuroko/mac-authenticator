@@ -169,9 +169,9 @@ struct ContentView: View {
     return Button {
       model.copy(account)
     } label: {
-      VStack(alignment: .leading, spacing: 9) {
+      VStack(alignment: compact ? .center : .leading, spacing: 9) {
         HStack(alignment: .top) {
-          VStack(alignment: .leading, spacing: 3) {
+          VStack(alignment: compact ? .center : .leading, spacing: 3) {
             Text(
               account.issuer.isEmpty
                 ? account.name : compact ? "\(account.issuer) · \(account.name)" : account.issuer
@@ -181,25 +181,34 @@ struct ContentView: View {
               Text(account.name).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
             }
           }
-          Spacer()
-          if model.copiedID == account.id {
+          if !compact { Spacer() }
+          if !compact && model.copiedID == account.id {
             Label("Copied", systemImage: "checkmark")
               .font(.system(size: 11)).foregroundStyle(.secondary)
           }
         }
-        HStack(alignment: .center) {
+        ZStack(alignment: compact ? .center : .leading) {
           Text(display).font(.system(size: compact ? 28 : 30, weight: .medium, design: .default))
             .monospacedDigit().foregroundStyle(.primary)
-          Spacer()
-          ZStack {
-            Circle().stroke(blue.opacity(0.12), lineWidth: 2)
-            Circle().trim(from: 0, to: Double(remaining) / Double(account.period)).stroke(
-              remaining <= 5 ? Color.orange : blue,
-              style: StrokeStyle(lineWidth: 2, lineCap: .round)
-            ).rotationEffect(.degrees(-90))
-            Text("\(remaining)").font(.system(size: 11, weight: .medium, design: .default))
-              .foregroundStyle(.secondary)
-          }.frame(width: 28, height: 28)
+            .padding(.horizontal, compact ? 36 : 0)
+            .frame(maxWidth: .infinity, alignment: compact ? .center : .leading)
+          HStack {
+            Spacer()
+            ZStack {
+              Circle().stroke(blue.opacity(0.12), lineWidth: 2)
+              Circle().trim(from: 0, to: Double(remaining) / Double(account.period)).stroke(
+                remaining <= 5 ? Color.orange : blue,
+                style: StrokeStyle(lineWidth: 2, lineCap: .round)
+              ).rotationEffect(.degrees(-90))
+              if model.copiedID == account.id && compact {
+                Image(systemName: "checkmark").font(.system(size: 11, weight: .semibold))
+                  .accessibilityLabel("Copied")
+              } else {
+                Text("\(remaining)").font(.system(size: 11, weight: .medium, design: .default))
+                  .foregroundStyle(.secondary)
+              }
+            }.frame(width: 28, height: 28)
+          }
         }
       }.padding(.horizontal, compact ? 8 : 14)
         .padding(.vertical, compact ? 6 : 14)
