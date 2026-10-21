@@ -1,0 +1,15 @@
+.build/
+dist/
+.DS_Store
+
+# Local credentials and account exports
+.env
+.env.*
+*.keychain
+*.keychain-db
+*.p12
+*.pem
+*.mobileprovision
+credentials.json
+accounts.json
+qr-exports/
