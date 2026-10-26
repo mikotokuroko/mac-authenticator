@@ -1,0 +1,32 @@
+name: Release
+on:
+  push:
+    branches: [main]
+    paths: ['docs/RELEASE-NOTES.md']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (for example v1.0.0)
+        required: true
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test and build
+        run: |
+          ./test.sh
+          ./build.sh
+          codesign --verify --deep --strict 'dist/Mac Authenticator.app'
+          ditto -c -k --sequesterRsrc --keepParent 'dist/Mac Authenticator.app' dist/MacAuthenticator-arm64.zip
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag || 'v1.0.0' }}
+        run: |
+          gh release create "$RELEASE_TAG" dist/MacAuthenticator-arm64.zip \
+            --target "$GITHUB_SHA" --title "Mac Authenticator $RELEASE_TAG" \
+            --notes-file docs/RELEASE-NOTES.md

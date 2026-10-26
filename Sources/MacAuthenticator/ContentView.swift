@@ -5,8 +5,7 @@ struct ContentView: View {
   @ObservedObject var model: AppModel
   @State private var removal: OTPAccount?
   @State private var accountListHeight: CGFloat = 160
-  @AppStorage("simplifiedView") private var simplified = true
-  @AppStorage("minimalDefaultApplied") private var minimalDefaultApplied = false
+  @AppStorage("simplifiedView") private var simplified = false
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   private let blue = Color.accentColor
   private var compact: Bool { simplified && model.unlocked && !model.accounts.isEmpty }
@@ -47,12 +46,6 @@ struct ContentView: View {
     // NSPopover owns the material; avoid a second glass surface.
     .modifier(AccessiblePopoverSurface())
     .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 1), value: compact)
-    .onAppear {
-      if !minimalDefaultApplied {
-        simplified = true
-        minimalDefaultApplied = true
-      }
-    }
     .contextMenu { options }
     .onChange(of: simplified) { _, _ in model.search = "" }
     .confirmationDialog(
